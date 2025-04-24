@@ -36,7 +36,7 @@ def create_kmer_dict(kmer_length):
     print(f'Pickled k-mer dictionary has been dumped into ./kmer_dict.p')
     return kmer_dict
 
-def kmer_tokenization(kmer_dict, sequences, window_size, kmer_length):
+def kmer_tokenization(kmer_dict, sequences, window_size, n_batches, kmer_length):
     n_kmers = window_size-kmer_length+1
     kmer_sequences = np.array([[sequences[j][i:i+kmer_length] for i in range(n_kmers)] for j in range(n_batches)])
     kmer_seq = np.zeros((n_batches,n_kmers))
@@ -75,7 +75,7 @@ def main():
     sequences = sliding_window(sequence, window_size)
     kmer_length = 6
     kmer_dict = create_kmer_dict(kmer_length)
-    kmer_sequences, kmer_seqs = kmer_tokenization(kmer_dict, sequences, window_size, kmer_length)
+    kmer_sequences, kmer_seqs = kmer_tokenization(kmer_dict, sequences, window_size, n_batches, kmer_length)
     n_kmers = window_size-kmer_length+1
     shuffled_sequences = shuffle_data(n_batches, kmer_seqs)
     mask = gap_masking(n_batches, n_kmers, n_gaps=10)
