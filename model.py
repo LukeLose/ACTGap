@@ -44,6 +44,16 @@ def mask_seq(input, mask):
     mask_values = tf.fill(input.shape, mask_token)
     return tf.where(mask_pos, mask_values, input)
 
+def loss_function(predicted_seq, actual_seq, mask):
+    masked_pred = tf.boolean_mask(predicted_seq, mask)
+    masked_act = tf.boolean_mask(actual_seq, mask)
+    scce = tf.keras.losses.sparse_categorical_crossentropy(masked_act, masked_pred, from_logits=True)
+    return tf.reduce_sum(scce) 
+
+def accuracy_function(probs, inputs, mask):
+    correct = tf.cast(tf.argmax(probs, axis=-1), tf.int32) == tf.cast(input, tf.int32)
+    return tf.reduce_mean(tf.boolean_mask(tf.cast(correct, tf.float32), mask))
+
 class TransformerBlock(tf.keras.layers.Layer):
     def __init__(self, emb_sz):
         super().__init__
@@ -81,6 +91,37 @@ class TransformerModel(tf.keras.Model):
         logits = self.classifier(output)
         
         return logits
+    
+    def train(self, input, mask, batch_size):
+        num_batches = int(len(input) / batch_size)
+
+        total_loss = total_seen = total_correct = 0
+        for index, end in enumerate(range(batch_size, len(input)+1, batch_size)):
+
+            ## Get the current batch of data, making sure to try to predict the next word
+            # start = end - batch_size
+            # input = input[start:end, :-1]
+
+            ## Perform a training forward pass. Make sure to factor out irrelevant labels.
+            with tf.GradientTape() as tape:
+                probs = self(input, mask)
+                num_predictions = tf.reduce_sum(tf.cast(mask, tf.float32))
+                loss = loss_function(probs, input, mask)
+                accuracy = accuracy_function(probs, input, mask)
+            gradients = tape.gradient(loss, self.trainable_variables)
+            self.optimizer.apply_gradients(zip(gradients, self.trainable_variables))
+
+            ## Compute and report on aggregated statistics
+            total_loss += loss
+            total_seen += num_predictions
+            total_correct += num_predictions * accuracy
+
+            avg_loss = float(total_loss / total_seen)
+            avg_acc = float(total_correct / total_seen)
+            avg_prp = np.exp(avg_loss)
+            print(f"\r[Valid {index+1}/{num_batches}]\t loss={avg_loss:.3f}\t acc: {avg_acc:.3f}\t perp: {avg_prp:.3f}", end='')
+
+        return
 
 
 
@@ -88,3 +129,5 @@ sample_input = tf.constant([[1, 5, 6, 7]])
 sample_mask = tf.constant([[1, 0, 0, 1]])
 model = TransformerModel()
 print(model(sample_input, sample_mask))
+print("hiiiii")
+model.train(sample_input, sample_mask, 1)
