@@ -1,3 +1,10 @@
+import pickle
+import random
+import numpy as np
+import tensorflow as tf
+from urllib.request import urlretrieve
+from itertools import product
+
 def open_file(file_name):
     infile = open(f'./{file_name}', 'r')
     infile = infile.readlines() # list
