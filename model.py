@@ -26,11 +26,11 @@ def positional_encoding(length, depth):
 
 
 class PositionalEncoding(tf.keras.layers.Layer):
-    def __init__(self, vocab_size, embed_size, window_size):
+    def __init__(self, vocab_size, embed_size, seq_len):
         super().__init__()
         self.embed_size = embed_size
         self.embedding = tf.keras.layers.Embedding(vocab_size, embed_size, mask_zero=True)
-        self.pos_encoding = positional_encoding(length=seq_len, depth=embed_size)[..., :window_size, :]
+        self.pos_encoding = positional_encoding(length=seq_len, depth=embed_size)[..., :seq_len, :]
 
     def call(self, x):
         length = tf.shape(x)[1]
@@ -42,6 +42,8 @@ class PositionalEncoding(tf.keras.layers.Layer):
 class Model(tf.keras.Model):
     def __init__(self):
         super().__init__()
-        self.embedding = tf.keras.layers.Embedding(seq_len, embed_size)
-        self.pos_encoding = PositionalEncoding()
-        self.transformer1bn = ??
+        self.pos_encoding = PositionalEncoding(vocab_size, embed_size)
+    
+    def call(self, input_seq, mask):
+        x = self.pos_encoding(input)
+        return x
