@@ -3,7 +3,7 @@ import numpy as np
 
 # hyperparameters
 kmer_size = 3
-vocab_size = 4 ^ kmer_size
+vocab_size = 4 ** kmer_size
 seq_len = 512
 embed_size = 512
 num_encoders = 3
@@ -30,7 +30,7 @@ class PositionalEncoding(tf.keras.layers.Layer):
         super().__init__()
         self.embed_size = embed_size
         self.embedding = tf.keras.layers.Embedding(vocab_size, embed_size, mask_zero=True)
-        self.pos_encoding = positional_encoding(length=seq_len, depth=embed_size)[..., :seq_len, :]
+        self.pos_encoding = positional_encoding(length=seq_len, depth=embed_size)
 
     def call(self, x):
         length = tf.shape(x)[1]
@@ -39,11 +39,22 @@ class PositionalEncoding(tf.keras.layers.Layer):
         x = x + self.pos_encoding[tf.newaxis, :length, :]
         return x
 
-class Model(tf.keras.Model):
+def mask_seq(input, mask):
+    mask_pos = mask == 0
+    mask_values = tf.fill(input.shape, mask_token)
+    return tf.where(mask_pos, mask_values, input)
+
+class TransformerModel(tf.keras.Model):
     def __init__(self):
         super().__init__()
-        self.pos_encoding = PositionalEncoding(vocab_size, embed_size)
+        self.pos_encoding = PositionalEncoding(vocab_size, embed_size, seq_len)
     
-    def call(self, input_seq, mask):
-        x = self.pos_encoding(input)
+    def call(self, input_seq, mask=None):
+        masked_input = mask_seq(input_seq, mask)
+        x = self.pos_encoding(masked_input)
         return x
+
+sample_input = tf.constant([[1, 5, 6, 7]])
+sample_mask = tf.constant([[1, 0, 0, 1]])
+model = TransformerModel()
+print(model(sample_input, sample_mask))
