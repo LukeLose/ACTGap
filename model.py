@@ -44,6 +44,25 @@ def mask_seq(input, mask):
     mask_values = tf.fill(input.shape, mask_token)
     return tf.where(mask_pos, mask_values, input)
 
+class TransformerBlock(tf.keras.layers.Layer):
+    def __init__(self, emb_sz):
+        super().__init__
+        self.feed_forward1 = tf.keras.layers.Dense(units=emb_sz, activation='relu')
+        self.feed_forward2 = tf.keras.layers.Dense(units=emb_sz, activation='relu')
+        self.norm_layer1 = tf.keras.layers.LayerNormalization()
+        self.norm_layer2 = tf.keras.layers.LayerNormalization()
+        self.attention = tf.keras.layers.MultiHeadAttention(num_attention_heads, key_dim=64)
+
+    def call(self, inputs, mask):
+        attention_output = self.attention(inputs, inputs, inputs, attention_mask = mask)
+        residuals = self.norm_layer1(inputs + attention_output)
+        output = self.feed_forward1(residuals)
+        output = self.feed_forward2(output)
+        output = self.norm_layer2(output)
+        output = tf.nn.relu(output)
+
+        return output
+
 class TransformerModel(tf.keras.Model):
     def __init__(self):
         super().__init__()
