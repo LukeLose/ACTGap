@@ -83,7 +83,7 @@ class TransformerModel(tf.keras.Model):
         self.hidden_size = hidden_size
         self.pos_encoding = PositionalEncoding(vocab_size, embed_size, seq_len)
         self.transformer_blocks = [TransformerBlock(embed_size) for i in range(num_encoders)]
-        self.classifier = tf.keras.layers.Dense(units=vocab_size, activation='relu')
+        self.classifier = tf.keras.layers.Dense(units=vocab_size)
 
 
     def call(self, input_seq, mask=None):
@@ -91,14 +91,12 @@ class TransformerModel(tf.keras.Model):
         embed_seq = self.pos_encoding(masked_input)
         print("pppppp")
         for block in self.transformer_blocks:
-
             print("12345")
             embed_seq = block(embed_seq, mask)
         print("ooooooooo")
         logits = self.classifier(embed_seq)
         print("qqqqqqq")
-
-        output = block(embed_seq)
+        output = block(embed_seq, mask)
         logits = self.classifier(output)
 
 
@@ -139,7 +137,7 @@ class TransformerModel(tf.keras.Model):
 
 sample_input = tf.constant([[1, 5, 6, 7]])
 sample_mask = tf.constant([[1, 0, 0, 1]])
-model = TransformerModel()
+model = TransformerModel(hidden_size=1)
 print(model(sample_input, sample_mask))
 print("hiiiii")
 model.train(sample_input, sample_mask, 1)
