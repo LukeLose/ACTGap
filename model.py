@@ -64,25 +64,25 @@ class TransformerBlock(tf.keras.layers.Layer):
         return output
 
 class TransformerModel(tf.keras.Model):
-    def __init__(self):
+    def __init__(self, hidden_size):
         super().__init__()
+        self.vocab_size = vocab_size
+        self.hidden_size = hidden_size
         self.pos_encoding = PositionalEncoding(vocab_size, embed_size, seq_len)
-        self.feed_forward1 = tf.keras.layers.Dense(units=embed_size, activation='relu')
-        self.feed_forward2 = tf.keras.layers.Dense(units=embed_size, activation='relu')
-        self.norm_layer1 = tf.keras.layers.LayerNormalization()
-        self.norm_layer2 = tf.keras.layers.LayerNormalization()
-        self.attention = tf.keras.layers.MultiHeadAttention(num_attention_heads, key_dim=64)
-    
+        self.transformer_blocks = [TransformerBlock(embed_size) for i in range(num_encoders)]
+        self.classifier = tf.keras.layers.Dense(units=vocab_size, activation='softmax')
+
+
     def call(self, input_seq, mask=None):
         masked_input = mask_seq(input_seq, mask)
-        x = self.pos_encoding(masked_input)
-        attention_output = self.attention(x, x, x, attention_mask = mask)
-        residuals = self.norm_layer1(x + attention_output)
-        output = self.feed_forward1(residuals)
-        output = self.feed_forward2(output)
-        output = self.norm_layer2(output)
-        output = tf.nn.relu(output)
-        return x
+        embed_seq = self.pos_encoding(masked_input)
+        for block in self.transformer_blocks:
+            output = block(embed_seq)
+        logits = self.classifier(output)
+        
+        return logits
+
+
 
 sample_input = tf.constant([[1, 5, 6, 7]])
 sample_mask = tf.constant([[1, 0, 0, 1]])
