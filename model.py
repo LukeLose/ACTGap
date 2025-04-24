@@ -11,6 +11,7 @@ num_attention_heads = 4
 classifier_dim = 64
 classifier_num_layers = 3
 mask_token = 0
+hidden_size = 32
 
 def positional_encoding(length, depth):
     depth = depth/2
@@ -51,12 +52,12 @@ def loss_function(predicted_seq, actual_seq, mask):
     return tf.reduce_sum(scce) 
 
 def accuracy_function(probs, inputs, mask):
-    correct = tf.cast(tf.argmax(probs, axis=-1), tf.int32) == tf.cast(input, tf.int32)
+    correct = tf.cast(tf.argmax(probs, axis=-1), tf.int32) == tf.cast(inputs, tf.int32)
     return tf.reduce_mean(tf.boolean_mask(tf.cast(correct, tf.float32), mask))
 
 class TransformerBlock(tf.keras.layers.Layer):
     def __init__(self, emb_sz):
-        super().__init__
+        super().__init__()
         self.feed_forward1 = tf.keras.layers.Dense(units=emb_sz, activation='relu')
         self.feed_forward2 = tf.keras.layers.Dense(units=emb_sz, activation='relu')
         self.norm_layer1 = tf.keras.layers.LayerNormalization()
@@ -64,18 +65,20 @@ class TransformerBlock(tf.keras.layers.Layer):
         self.attention = tf.keras.layers.MultiHeadAttention(num_attention_heads, key_dim=64)
 
     def call(self, inputs, mask):
+        print("asdhjk")
         attention_output = self.attention(inputs, inputs, inputs, attention_mask = mask)
         residuals = self.norm_layer1(inputs + attention_output)
         output = self.feed_forward1(residuals)
         output = self.feed_forward2(output)
         output = self.norm_layer2(output)
         output = tf.nn.relu(output)
-
+        print("qwert")
         return output
 
 class TransformerModel(tf.keras.Model):
-    def __init__(self, hidden_size):
+    def __init__(self):
         super().__init__()
+        self.optimizer = tf.keras.optimizers.Adam()
         self.vocab_size = vocab_size
         self.hidden_size = hidden_size
         self.pos_encoding = PositionalEncoding(vocab_size, embed_size, seq_len)
@@ -86,10 +89,13 @@ class TransformerModel(tf.keras.Model):
     def call(self, input_seq, mask=None):
         masked_input = mask_seq(input_seq, mask)
         embed_seq = self.pos_encoding(masked_input)
+        print("pppppp")
         for block in self.transformer_blocks:
-            output = block(embed_seq)
-        logits = self.classifier(output)
-        
+            print("12345")
+            embed_seq = block(embed_seq, mask)
+        print("ooooooooo")
+        logits = self.classifier(embed_seq)
+        print("qqqqqqq")
         return logits
     
     def train(self, input, mask, batch_size):
