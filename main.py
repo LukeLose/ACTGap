@@ -14,10 +14,12 @@ def default_settings_and_PARSER() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="default args for transformer model")
     parser.add_argument("--fasta", required=True, help="FASTA path: REQUIRED")
     parser.add_argument("--kmer_length", type=int, default=6)
-    parser.add_argument("--window", type=int, default=512)
+    parser.add_argument("--window", type=int, default=32) #change back to 512
     parser.add_argument("--pkl", type=Path, default=Path("pkl_data/six_mer.pkl"))
     parser.add_argument("--batch", type=int, default=32)
     parser.add_argument("--epochs", type=int, default=3)
+    parser.add_argument("--min_gap", required=True, help="min kmer gap: REQUIRED")
+    parser.add_argument("--max_gap", required=True, help="max kmer gap: REQUIRED")
     return parser.parse_args()
 
 def main():
@@ -33,7 +35,7 @@ def main():
         kmer_length  = args.kmer_length,
         kmer_pkl_path= args.pkl
     )
-    masks_input = make_contiguous_gaps(kmer_inputs)
+    masks_input = make_contiguous_gaps(kmer_inputs, args.min_gap, args.max_gap)
     print("k_mer input matrix:", kmer_inputs.shape)
     print("masks input matrix:", masks_input.shape)
 
@@ -49,7 +51,14 @@ def main():
             model.train(batch_ids, batch_masks, batch_ids.shape[0])
         print()
 
+<<<<<<< HEAD
     #Testing
+=======
+    #TAKE THIS OUT, ONLY NEEDED BEFORE IMPLEMENTING SPLITTING OF 80/20
+
+    model.test()
+
+>>>>>>> efa9f54306908234ecff6c7f4c8a44585ff091af
     
 
 if __name__ == "__main__":
