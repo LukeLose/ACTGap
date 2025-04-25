@@ -24,7 +24,7 @@ def main():
     args = default_settings_and_PARSER()
 
     if not args.pkl.exists():
-        print("pickle path not found, must create")
+        print("\npickle path not found, must create")
         kmer_pkl_generation(args.kmer_length, str(args.pkl))
 
     kmer_inputs, _ = encode_fasta_to_kmer_ids(
