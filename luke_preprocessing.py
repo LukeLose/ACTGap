@@ -147,6 +147,7 @@ if __name__ == "__main__":
     )
 
     masks_array = make_contiguous_gaps(kmer_ids, 50, 100)
+    
 
     print("- Loaded pickle, num k-mers:", len(kmer_dict))
     print("- kmer_ids shape           :", kmer_ids.shape)
