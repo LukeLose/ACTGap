@@ -48,5 +48,7 @@ def main():
             model.train(batch_ids, batch_masks, batch_ids.shape[0])
         print()
 
+    test
+
 if __name__ == "__main__":
     main()
