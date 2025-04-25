@@ -38,7 +38,8 @@ def main():
     print("masks input matrix:", masks_input.shape)
 
     dataset = make_dataset(kmer_inputs, masks_input, args.batch)
-
+    print("hello")
+    print(dataset)
     model = TransformerModel()
 
     #Training
@@ -47,6 +48,9 @@ def main():
         for batch_ids, batch_masks in dataset:
             model.train(batch_ids, batch_masks, batch_ids.shape[0])
         print()
+
+    #Testing
+    
 
 if __name__ == "__main__":
     main()
