@@ -82,8 +82,8 @@ class TransformerBlock(tf.keras.layers.Layer):
 class TransformerModel(tf.keras.Model):
     def __init__(self):
         super().__init__()
-        #self.optimizer = tf.keras.optimizers.Adam()
-        self.optimizer = tf.keras.optimizers.legacy.Adam()
+        self.optimizer = tf.keras.optimizers.Adam()
+        # self.optimizer = tf.keras.optimizers.legacy.Adam()
         self.vocab_size = vocab_size
         self.hidden_size = hidden_size
         print("vocab size: ", self.vocab_size)
@@ -94,6 +94,8 @@ class TransformerModel(tf.keras.Model):
 
 
     def call(self, input_seq, mask=None):
+        print("")
+        print(f"actual: {input_seq[0]}")
         masked_input = mask_seq(input_seq, mask)
         embed_seq = self.pos_encoding(masked_input)
         #print("pppppp")
@@ -103,6 +105,7 @@ class TransformerModel(tf.keras.Model):
         #print("ooooooooo")
         logits = self.classifier(embed_seq)
         #print("qqqqqqq")
+        print(f"pred: {tf.argmax(logits[0], axis=-1)}")
         return logits
     
     def train(self, input, mask, batch_size):
@@ -132,9 +135,38 @@ class TransformerModel(tf.keras.Model):
             avg_loss = float(total_loss / total_seen)
             avg_acc = float(total_correct / total_seen)
             avg_prp = np.exp(avg_loss)
-            print(f"\r[Valid {index+1}/{num_batches}]\t loss={avg_loss:.3f}\t acc: {avg_acc:.3f}\t perp: {avg_prp:.3f}", end='')
+            print(f"\r[Train {index+1}/{num_batches}]\t loss={avg_loss:.3f}\t acc: {avg_acc:.3f}\t perp: {avg_prp:.3f}", end='')
 
         return
+    
+    def test(self, input, mask, batch_size):
+        num_batches = int(len(input) / batch_size)
+
+        total_loss = total_seen = total_correct = 0
+        for index, end in enumerate(range(batch_size, len(input)+1, batch_size)):
+
+            ## Get the current batch of data, making sure to try to predict the next word
+            # start = end - batch_size
+            # input = input[start:end, :-1]
+
+            ## Perform a training forward pass. Make sure to factor out irrelevant labels.
+            probs = self(input, mask)
+            num_predictions = tf.reduce_sum(tf.cast(mask, tf.float32))
+            loss = loss_function(probs, input, mask)
+            accuracy = accuracy_function(probs, input, mask)
+            
+            ## Compute and report on aggregated statistics
+            total_loss += loss
+            total_seen += num_predictions
+            total_correct += num_predictions * accuracy
+
+            avg_loss = float(total_loss / total_seen)
+            avg_acc = float(total_correct / total_seen)
+            avg_prp = np.exp(avg_loss)
+            print(f"\r[Train {index+1}/{num_batches}]\t loss={avg_loss:.3f}\t acc: {avg_acc:.3f}\t perp: {avg_prp:.3f}", end='')
+
+        return
+
 
 
 
