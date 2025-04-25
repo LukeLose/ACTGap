@@ -108,7 +108,7 @@ def encode_fasta_to_kmer_ids(fasta_path: str, window_size: int, kmer_length: int
 
 
 #now let us make our gaps
-def make_contiguous_gaps(kmer_id_arr, min_gap=1, max_gap=40):
+def make_contiguous_gaps(kmer_id_arr, min_gap=50, max_gap=100):
     batch_size, kmer_len = kmer_id_arr.shape
     masks = np.ones((batch_size, kmer_len), dtype=int)
     for i in range(batch_size):
@@ -146,7 +146,7 @@ if __name__ == "__main__":
         kmer_pkl_path    = str(pkl_path)
     )
 
-    masks_array = make_contiguous_gaps(kmer_ids, 1, 40)
+    masks_array = make_contiguous_gaps(kmer_ids, 50, 100)
 
     print("- Loaded pickle, num k-mers:", len(kmer_dict))
     print("- kmer_ids shape           :", kmer_ids.shape)
