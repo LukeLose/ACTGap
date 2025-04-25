@@ -42,7 +42,7 @@ class PositionalEncoding(tf.keras.layers.Layer):
 
 def mask_seq(input, mask):
     input = tf.cast(input, tf.int32)
-    mask_pos = mask == 0
+    mask_pos = mask == 1
     mask_values = tf.fill(input.shape, mask_token)
     return tf.where(mask_pos, tf.cast(mask_values, tf.int32), input)
 
