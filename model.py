@@ -2,8 +2,8 @@ import tensorflow as tf
 import numpy as np
 
 # hyperparameters
-kmer_size = 3
-vocab_size = 4 ** kmer_size
+kmer_size = 6
+vocab_size = (4 ** kmer_size) + 2 #+2 to account for BEGIN and END tokens
 seq_len = 512
 embed_size = 512
 num_encoders = 3
@@ -41,9 +41,10 @@ class PositionalEncoding(tf.keras.layers.Layer):
         return x
 
 def mask_seq(input, mask):
+    input = tf.cast(input, tf.int32)
     mask_pos = mask == 0
     mask_values = tf.fill(input.shape, mask_token)
-    return tf.where(mask_pos, mask_values, input)
+    return tf.where(mask_pos, tf.cast(mask_values, tf.int32), input)
 
 def loss_function(predicted_seq, actual_seq, mask):
     masked_pred = tf.boolean_mask(predicted_seq, mask)
@@ -66,6 +67,9 @@ class TransformerBlock(tf.keras.layers.Layer):
 
     def call(self, inputs, mask):
         #print("asdhjk")
+        mask = tf.expand_dims(mask, axis=1)
+        mask = tf.expand_dims(mask, axis=2)
+
         attention_output = self.attention(inputs, inputs, inputs, attention_mask = mask)
         residuals = self.norm_layer1(inputs + attention_output)
         output = self.feed_forward1(residuals)
@@ -78,9 +82,12 @@ class TransformerBlock(tf.keras.layers.Layer):
 class TransformerModel(tf.keras.Model):
     def __init__(self):
         super().__init__()
-        self.optimizer = tf.keras.optimizers.Adam()
+        #self.optimizer = tf.keras.optimizers.Adam()
+        self.optimizer = tf.keras.optimizers.legacy.Adam()
         self.vocab_size = vocab_size
         self.hidden_size = hidden_size
+        print("vocab size: ", self.vocab_size)
+        print("embed_size: ", embed_size)
         self.pos_encoding = PositionalEncoding(vocab_size, embed_size, seq_len)
         self.transformer_blocks = [TransformerBlock(embed_size) for i in range(num_encoders)]
         self.classifier = tf.keras.layers.Dense(units=vocab_size)
