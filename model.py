@@ -65,14 +65,14 @@ class TransformerBlock(tf.keras.layers.Layer):
         self.attention = tf.keras.layers.MultiHeadAttention(num_attention_heads, key_dim=64)
 
     def call(self, inputs, mask):
-        print("asdhjk")
+        #print("asdhjk")
         attention_output = self.attention(inputs, inputs, inputs, attention_mask = mask)
         residuals = self.norm_layer1(inputs + attention_output)
         output = self.feed_forward1(residuals)
         output = self.feed_forward2(output)
         output = self.norm_layer2(output)
         output = tf.nn.relu(output)
-        print("qwert")
+        #print("qwert")
         return output
 
 class TransformerModel(tf.keras.Model):
@@ -89,13 +89,13 @@ class TransformerModel(tf.keras.Model):
     def call(self, input_seq, mask=None):
         masked_input = mask_seq(input_seq, mask)
         embed_seq = self.pos_encoding(masked_input)
-        print("pppppp")
+        #print("pppppp")
         for block in self.transformer_blocks:
-            print("12345")
+            #print("12345")
             embed_seq = block(embed_seq, mask)
-        print("ooooooooo")
+        #print("ooooooooo")
         logits = self.classifier(embed_seq)
-        print("qqqqqqq")
+        #print("qqqqqqq")
         return logits
     
     def train(self, input, mask, batch_size):
@@ -134,6 +134,6 @@ class TransformerModel(tf.keras.Model):
 sample_input = tf.constant([[1, 5, 6, 7]])
 sample_mask = tf.constant([[1, 0, 0, 1]])
 model = TransformerModel()
-print(model(sample_input, sample_mask))
-print("hiiiii")
+#print(model(sample_input, sample_mask))
+#print("hiiiii")
 model.train(sample_input, sample_mask, 1)

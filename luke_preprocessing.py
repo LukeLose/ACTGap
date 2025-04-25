@@ -2,6 +2,7 @@ import os, gzip, random, json, pickle, itertools, urllib.request
 from pathlib import Path
 from typing import Iterator, List, Dict, Tuple
 import numpy as np
+import tensorflow as tf
 
 def windows_from_fasta (fasta_path, window_size: int) -> Iterator[str]:
     '''
@@ -117,6 +118,15 @@ def make_contiguous_gaps(kmer_id_arr, min_gap=1, max_gap=40):
         start = np.random.randint(1, kmer_len - span_len - 1)
         masks[i, start : start + span_len] = 0
     return masks
+
+def make_dataset(kmer_array: np.ndarray, masks_array: np.ndarray, batch_size: int) -> tf.data.Dataset:
+    dataset = tf.data.Dataset.from_tensor_slices((kmer_array, masks_array))
+    buff_size = len(kmer_array)
+    dataset = dataset.shuffle(buffer_size=buff_size, reshuffle_each_iteration=True)
+    #prefetch speeds up the process significantly
+    dataset = dataset.batch(batch_size).prefetch(tf.data.AUTOTUNE)
+    return dataset
+
 
 
 if __name__ == "__main__":
