@@ -96,10 +96,6 @@ class TransformerModel(tf.keras.Model):
         print("ooooooooo")
         logits = self.classifier(embed_seq)
         print("qqqqqqq")
-        output = block(embed_seq, mask)
-        logits = self.classifier(output)
-
-
         return logits
     
     def train(self, input, mask, batch_size):
@@ -137,7 +133,7 @@ class TransformerModel(tf.keras.Model):
 
 sample_input = tf.constant([[1, 5, 6, 7]])
 sample_mask = tf.constant([[1, 0, 0, 1]])
-model = TransformerModel(hidden_size=1)
+model = TransformerModel()
 print(model(sample_input, sample_mask))
 print("hiiiii")
 model.train(sample_input, sample_mask, 1)
