@@ -51,14 +51,10 @@ def main():
             model.train(batch_ids, batch_masks, batch_ids.shape[0])
         print()
 
-<<<<<<< HEAD
-    #Testing
-=======
     #TAKE THIS OUT, ONLY NEEDED BEFORE IMPLEMENTING SPLITTING OF 80/20
 
     model.test()
 
->>>>>>> efa9f54306908234ecff6c7f4c8a44585ff091af
     
 
 if __name__ == "__main__":
