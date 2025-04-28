@@ -18,8 +18,8 @@ def default_settings_and_PARSER() -> argparse.Namespace:
     parser.add_argument("--pkl", type=Path, default=Path("pkl_data/six_mer.pkl"))
     parser.add_argument("--batch", type=int, default=32)
     parser.add_argument("--epochs", type=int, default=3)
-    parser.add_argument("--min_gap", required=True, help="min kmer gap: REQUIRED")
-    parser.add_argument("--max_gap", required=True, help="max kmer gap: REQUIRED")
+    parser.add_argument("--min_gap", type=int, required=True, help="min kmer gap: REQUIRED")
+    parser.add_argument("--max_gap", type=int, required=True, help="max kmer gap: REQUIRED")
     return parser.parse_args()
 
 def main():
