@@ -39,6 +39,7 @@ def kmer_pkl_generation(kmer_length: int, output_path: str) -> None:
     }
     with open(output_path, 'wb') as f:
         pickle.dump(kmer_dict, f)
+    print(kmer_dict)
     print(f"dump {len(kmer_dict)} k-mers of length {kmer_length} to {output_path}")
 
 # def window_to_kmer_ids(
