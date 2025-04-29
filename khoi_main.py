@@ -46,7 +46,7 @@ def main():
     # print(dataset)
     # print(kmer_inputs)
     if args.model == "lstm":
-        model = RNNDecoder()
+        model = RNNDecoder(args.kmer_length)
     else:
         model = TransformerModel()
     # for batch_ids, batch_masks in dataset:

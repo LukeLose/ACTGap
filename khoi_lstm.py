@@ -2,20 +2,14 @@ import tensorflow as tf
 import numpy as np
 from khoi_model import loss_function, accuracy_function, mask_seq
 
-kmer_size = 2
-vocab_size = 4 ** kmer_size + 2
-hidden_size = 512
-window_size = 10
-
 
 class RNNDecoder(tf.keras.layers.Layer):
 
-    def __init__(self):
+    def __init__(self, kmer_size):
 
         super().__init__()
-        self.vocab_size  = vocab_size
-        self.hidden_size = hidden_size
-        self.window_size = window_size
+        self.vocab_size  = 4 ** kmer_size + 2
+        self.hidden_size = 512
 
         self.feed_forward = tf.keras.layers.Dense(self.hidden_size)
         self.embedding = tf.keras.layers.Embedding(self.vocab_size, self.hidden_size)
