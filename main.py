@@ -20,6 +20,7 @@ def default_settings_and_PARSER() -> argparse.Namespace:
     parser.add_argument("--epochs", type=int, default=3)
     parser.add_argument("--min_gap", type=int, required=True, help="min kmer gap: REQUIRED")
     parser.add_argument("--max_gap", type=int, required=True, help="max kmer gap: REQUIRED")
+    parser.add_argument("--test_fasta", required=True, help="test_FASTA path: REQUIRED")
     return parser.parse_args()
 
 def main():
@@ -51,11 +52,15 @@ def main():
             model.train(batch_ids, batch_masks, batch_ids.shape[0])
         print()
 
-    #TAKE THIS OUT, ONLY NEEDED BEFORE IMPLEMENTING SPLITTING OF 80/20
+    test_kmer_inputs, _ = encode_fasta_to_kmer_ids(
+        fasta_path   = args.test_fasta,
+        window_size  = args.window,
+        kmer_length  = args.kmer_length,
+        kmer_pkl_path= args.pkl
+    )
+    test_masks_input = make_contiguous_gaps(test_kmer_inputs, args.min_gap, args.max_gap)
 
-    model.test()
-
-    
+    model.test(test_kmer_inputs, test_masks_input, args.batch)
 
 if __name__ == "__main__":
     main()
