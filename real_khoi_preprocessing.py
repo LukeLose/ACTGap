@@ -120,6 +120,19 @@ def make_contiguous_gaps(kmer_id_arr, min_gap=50, max_gap=100):
         masks[i, start : start + span_len] = 0
     return masks
 
+def make_end_masked_gaps(kmer_id_arr, min_gap=50, max_gap=100):
+    batch_size, kmer_len = kmer_id_arr.shape
+    masks = np.ones((batch_size, kmer_len), dtype=int)
+
+    for i in range(batch_size):
+        span_len = np.random.randint(min_gap, max_gap + 1)
+        
+        end_token_index = kmer_len - 1  # accounting for END token
+        start_index = max(1, end_token_index - span_len)  # accounting for BEGIN token
+        masks[i, start_index:end_token_index] = 0 
+
+    return masks
+
 def make_dataset(kmer_array: np.ndarray, masks_array: np.ndarray, batch_size: int) -> tf.data.Dataset:
     dataset = tf.data.Dataset.from_tensor_slices((kmer_array, masks_array))
     buff_size = len(kmer_array)
