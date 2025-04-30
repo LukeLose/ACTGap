@@ -43,18 +43,9 @@ def kmer_pkl_generation(kmer_length: int, output_path: str) -> None:
     print(kmer_dict)
     print(f"dump {len(kmer_dict)} k-mers of length {kmer_length} to {output_path}")
 
-# def window_to_kmer_ids(
-#     window: str,
-#     kmer_len: int,
-#     str_to_id: dict[str, int]
-# ) -> list[int]:
-#     n_kmers = len(window) - kmer_len + 1
-#     return [
-#         str_to_id[window[i : i + kmer_len]]
-#         for i in range(n_kmers)
-#     ]
 
 def encode_fasta_to_kmer_ids(fasta_path: str, window_size: int, kmer_length: int,
+<<<<<<< HEAD
     kmer_pkl_path: str) ->Tuple[np.ndarray, Dict[int, str], int]:
     # #build pickle if not done prior
     # if kmer_dict is None:
@@ -63,6 +54,9 @@ def encode_fasta_to_kmer_ids(fasta_path: str, window_size: int, kmer_length: int
     #         idx: "".join(kmer)
     #         for idx, kmer in enumerate(itertools.product(alphabet, repeat=kmer_length))
     #     }
+=======
+    kmer_pkl_path: str) ->Tuple[np.ndarray, Dict[int, str]]:
+>>>>>>> 2dcee8b553a442c7d5b19140d5e94bc6afc199ba
     with open(kmer_pkl_path, "rb") as f:
         kmer_dict: Dict[int, str] = pickle.load(f)
 
@@ -134,6 +128,20 @@ def make_contiguous_gaps(kmer_id_arr, min_gap=50, max_gap=100):
         masks[i, start : start + span_len] = 1
     return masks
 
+def make_end_masked_gaps(kmer_id_arr, min_gap=50, max_gap=100):
+    batch_size, kmer_len = kmer_id_arr.shape
+    masks = np.ones((batch_size, kmer_len), dtype=int)
+
+    for i in range(batch_size):
+        span_len = np.random.randint(min_gap, max_gap + 1)
+        
+        end_token_index = kmer_len - 1  # accounting for END token
+        start_index = max(1, end_token_index - span_len)  # accounting for BEGIN token
+        masks[i, start_index:end_token_index] = 0 
+
+    return masks
+
+
 def make_dataset(kmer_array: np.ndarray, masks_array: np.ndarray, batch_size: int) -> tf.data.Dataset:
     dataset = tf.data.Dataset.from_tensor_slices((kmer_array, masks_array))
     buff_size = len(kmer_array)
@@ -144,29 +152,42 @@ def make_dataset(kmer_array: np.ndarray, masks_array: np.ndarray, batch_size: in
 
 
 
+<<<<<<< HEAD
 if __name__ == "__main__":
     fasta_path     = "genome_data/sequence_first_100k.fasta"
     kmer_len       = 2
     window_size    = 1024
     pkl_path  = Path("pkl_data/two_mer.pkl")
+=======
+# if __name__ == "__main__":
+#     fasta_path     = "genome_data/sequence_first_100k.fasta"
+#     kmer_len       = 6
+#     window_size    = 512
+#     pkl_path  = Path("pkl_data/six_mer.pkl")
+>>>>>>> 2dcee8b553a442c7d5b19140d5e94bc6afc199ba
 
-    if not pkl_path.exists():
-        print("Dictionary missing – generating & pickling …")
-        kmer_pkl_generation(kmer_len, pkl_path)
+#     if not pkl_path.exists():
+#         print("Dictionary missing – generating & pickling …")
+#         kmer_pkl_generation(kmer_len, pkl_path)
 
-    kmer_ids, kmer_dict = encode_fasta_to_kmer_ids(
-        fasta_path       = fasta_path,
-        window_size      = window_size,
-        kmer_length      = kmer_len,
-        kmer_pkl_path    = str(pkl_path)
-    )
+#     kmer_ids, kmer_dict = encode_fasta_to_kmer_ids(
+#         fasta_path       = fasta_path,
+#         window_size      = window_size,
+#         kmer_length      = kmer_len,
+#         kmer_pkl_path    = str(pkl_path)
+#     )
 
+<<<<<<< HEAD
     masks_array = make_contiguous_gaps(kmer_ids, 50, 100)
 
+=======
+#     masks_array = make_contiguous_gaps(kmer_ids, 50, 100)
+    
+>>>>>>> 2dcee8b553a442c7d5b19140d5e94bc6afc199ba
 
-    print("- Loaded pickle, num k-mers:", len(kmer_dict))
-    print("- kmer_ids shape           :", kmer_ids.shape)
-    print("- first row (15 entries)   :", kmer_ids[0, :15])
-    print("- masking array shape      :", masks_array.shape)
-    print("- masking(whole first row  :", masks_array[0,])
+#     print("- Loaded pickle, num k-mers:", len(kmer_dict))
+#     print("- kmer_ids shape           :", kmer_ids.shape)
+#     print("- first row (15 entries)   :", kmer_ids[0, :15])
+#     print("- masking array shape      :", masks_array.shape)
+#     print("- masking(whole first row  :", masks_array[0,])
 
