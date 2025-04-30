@@ -2,8 +2,8 @@ import tensorflow as tf
 import numpy as np
 
 # hyperparameters
-kmer_size = 6
-vocab_size = (4 ** kmer_size) + 2 #+2 to account for BEGIN and END tokens
+kmer_size = 3
+vocab_size = 4 ** kmer_size
 seq_len = 512
 embed_size = 512
 num_encoders = 3
@@ -41,10 +41,9 @@ class PositionalEncoding(tf.keras.layers.Layer):
         return x
 
 def mask_seq(input, mask):
-    input = tf.cast(input, tf.int32)
-    mask_pos = mask == 1
+    mask_pos = mask == 0
     mask_values = tf.fill(input.shape, mask_token)
-    return tf.where(mask_pos, tf.cast(mask_values, tf.int32), input)
+    return tf.where(mask_pos, mask_values, input)
 
 def loss_function(predicted_seq, actual_seq, mask):
     masked_pred = tf.boolean_mask(predicted_seq, mask)
@@ -67,9 +66,6 @@ class TransformerBlock(tf.keras.layers.Layer):
 
     def call(self, inputs, mask):
         #print("asdhjk")
-        mask = tf.expand_dims(mask, axis=1)
-        mask = tf.expand_dims(mask, axis=2)
-
         attention_output = self.attention(inputs, inputs, inputs, attention_mask = mask)
         residuals = self.norm_layer1(inputs + attention_output)
         output = self.feed_forward1(residuals)
@@ -83,19 +79,14 @@ class TransformerModel(tf.keras.Model):
     def __init__(self):
         super().__init__()
         self.optimizer = tf.keras.optimizers.Adam()
-        # self.optimizer = tf.keras.optimizers.legacy.Adam()
         self.vocab_size = vocab_size
         self.hidden_size = hidden_size
-        print("vocab size: ", self.vocab_size)
-        print("embed_size: ", embed_size)
         self.pos_encoding = PositionalEncoding(vocab_size, embed_size, seq_len)
         self.transformer_blocks = [TransformerBlock(embed_size) for i in range(num_encoders)]
-        self.classifier = tf.keras.layers.Dense(units=vocab_size)
+        self.classifier = tf.keras.layers.Dense(units=vocab_size, activation='softmax')
 
 
     def call(self, input_seq, mask=None):
-        print("")
-        print(f"actual: {input_seq[0]}")
         masked_input = mask_seq(input_seq, mask)
         embed_seq = self.pos_encoding(masked_input)
         #print("pppppp")
@@ -105,7 +96,6 @@ class TransformerModel(tf.keras.Model):
         #print("ooooooooo")
         logits = self.classifier(embed_seq)
         #print("qqqqqqq")
-        print(f"pred: {tf.argmax(logits[0], axis=-1)}")
         return logits
     
     def train(self, input, mask, batch_size):
@@ -135,38 +125,9 @@ class TransformerModel(tf.keras.Model):
             avg_loss = float(total_loss / total_seen)
             avg_acc = float(total_correct / total_seen)
             avg_prp = np.exp(avg_loss)
-            print(f"\r[Train {index+1}/{num_batches}]\t loss={avg_loss:.3f}\t acc: {avg_acc:.3f}\t perp: {avg_prp:.3f}", end='')
+            print(f"\r[Valid {index+1}/{num_batches}]\t loss={avg_loss:.3f}\t acc: {avg_acc:.3f}\t perp: {avg_prp:.3f}", end='')
 
         return
-    
-    def test(self, input, mask, batch_size):
-        num_batches = int(len(input) / batch_size)
-
-        total_loss = total_seen = total_correct = 0
-        for index, end in enumerate(range(batch_size, len(input)+1, batch_size)):
-
-            ## Get the current batch of data, making sure to try to predict the next word
-            # start = end - batch_size
-            # input = input[start:end, :-1]
-
-            ## Perform a training forward pass. Make sure to factor out irrelevant labels.
-            probs = self(input, mask)
-            num_predictions = tf.reduce_sum(tf.cast(mask, tf.float32))
-            loss = loss_function(probs, input, mask)
-            accuracy = accuracy_function(probs, input, mask)
-            
-            ## Compute and report on aggregated statistics
-            total_loss += loss
-            total_seen += num_predictions
-            total_correct += num_predictions * accuracy
-
-            avg_loss = float(total_loss / total_seen)
-            avg_acc = float(total_correct / total_seen)
-            avg_prp = np.exp(avg_loss)
-            print(f"\r[TEST {index+1}/{num_batches}]\t loss={avg_loss:.3f}\t acc: {avg_acc:.3f}\t perp: {avg_prp:.3f}", end='')
-
-        return
-
 
 
 
