@@ -38,7 +38,7 @@ model = DecoderModel(
     num_layers=4,
     embed_dim=256,
     num_heads=8,
-    mlp_dim=512,
+    hidden_size=512,
 )
 
 loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(

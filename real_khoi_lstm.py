@@ -82,7 +82,7 @@ class RNNDecoder(tf.keras.layers.Layer):
 
             ## Perform a training forward pass. Make sure to factor out irrelevant labels.
             probs = self(batch_input, batch_mask)
-            num_predictions = tf.reduce_sum(tf.cast(batch_mask, tf.float32))
+            num_predictions = tf.reduce_sum(tf.cast(batch_mask == 0, tf.float32))
             loss = loss_function(probs, batch_input, batch_mask)
             accuracy = accuracy_function(probs, batch_input, batch_mask)
             

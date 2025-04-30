@@ -29,23 +29,23 @@ class PositionalEncoding(tf.keras.layers.Layer):
 class DecoderBlock(tf.keras.layers.Layer):
     def __init__(self, embed_size, num_heads, hidden_size, **kwargs):
         super().__init__(**kwargs)
-        self.attention = tf.keras.layers.MultiHeadAttention(num_heads, key_dim=embed_size, use_bias=True, dropout=0.1)
+        self.attention = tf.keras.layers.MultiHeadAttention(num_heads, key_dim=embed_size, use_bias=True, dropout=0.3)
         self.feed_forward = tf.keras.Sequential([
             tf.keras.layers.Dense(hidden_size, activation='leaky_relu'),
             tf.keras.layers.Dense(embed_size),
         ])
         self.norm1 = tf.keras.layers.LayerNormalization(epsilon=1e-5)
         self.norm2 = tf.keras.layers.LayerNormalization(epsilon=1e-5)
-        self.dropout = tf.keras.layers.Dropout(0.1)
+        self.dropout = tf.keras.layers.Dropout(0.3)
 
     def call(self, inputs, training=False):
         # Self‑attention with residual
         attention_output = self.attention(inputs, inputs, inputs, use_causal_mask=True, training=training)
             # causal mask to prevent attention on future tokens, used in a decoder Transformer
-        out1 = self.norm1(inputs + self.drop(attention_output, training=training))
+        out1 = self.norm1(inputs + self.dropout(attention_output, training=training))
         # Feed‑forward with residual
         feed_forward_out = self.feed_forward(out1, training=training)
-        out2 = self.norm2(out1 + self.drop(feed_forward_out, training=training))
+        out2 = self.norm2(out1 + self.dropout(feed_forward_out, training=training))
         return out2
 
 
@@ -56,7 +56,7 @@ class DecoderModel(tf.keras.Model):
         self.positional_encoding = PositionalEncoding(vocab_size, embed_size, seq_len)
         self.decoder_blocks = [DecoderBlock(embed_size, num_heads, hidden_size) for i in range(num_layers)]
         self.norm = tf.keras.layers.LayerNormalization(epsilon=1e-5)
-        self.classifer = tf.keras.layers.Dense(vocab_size, activation='softmax', use_bias=False)
+        self.classifer = tf.keras.layers.Dense(vocab_size, use_bias=False)
 
     def call(self, inputs, training=False):
         # inputs: (batch, seq_len)
