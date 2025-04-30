@@ -36,7 +36,7 @@ model = DecoderModel(
     vocab_size=vocab_size,
     seq_len=seq_len,
     num_layers=4,
-    embed_dim=256,
+    embed_size=256,
     num_heads=8,
     hidden_size=512,
 )
@@ -83,7 +83,7 @@ model.compile(
     loss=masked_loss,
     metrics=[masked_accuracy],
 )
-
+a
 print("training!")
 history = model.fit(
     train_ds,
