@@ -4,7 +4,10 @@ from real_khoi_model import loss_function, accuracy_function, mask_seq
 import os
 
 
-class RNNDecoder(tf.keras.layers.Layer):
+#class RNNDecoder(tf.keras.layers.Layer):
+#@tf.keras.utils.register_keras_serializable(package="MyModels")
+class RNNDecoder(tf.keras.Model):
+
 
     def __init__(self, kmer_size, outfile):
 
