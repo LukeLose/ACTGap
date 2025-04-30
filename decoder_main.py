@@ -73,10 +73,10 @@ def masked_accuracy(labels, logits):
     match = tf.where(mask, match, 0.0)
 
 
-    total_loss = tf.reduce_sum(loss)
+    total_acc = tf.reduce_sum(match)
     #use the mask to find valid tokens
     num_tokens = tf.reduce_sum(tf.cast(mask, tf.float32))
-    return tf.reduce_sum(match) / num_tokens
+    return total_acc / num_tokens
 
 model.compile(
     optimizer=tf.keras.optimizers.legacy.Adam(args.lr),

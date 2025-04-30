@@ -2,15 +2,9 @@ import tensorflow as tf
 import numpy as np
 
 # hyperparameters
-<<<<<<< HEAD:model.py
-kmer_size = 3
-vocab_size = 4 ** kmer_size
-seq_len = 512
-=======
 kmer_size = 2
 vocab_size = (4 ** kmer_size) + 2 #+2 to account for BEGIN and END tokens
 seq_len = 514
->>>>>>> 2dcee8b553a442c7d5b19140d5e94bc6afc199ba:khoi_model.py
 embed_size = 512
 num_encoders = 3
 num_attention_heads = 4
@@ -26,7 +20,7 @@ def positional_encoding(length, depth):
 
     angle_rates = 1 / (10000**depths)        
     angle_rads = positions * angle_rates    
-    
+
     pos_encoding = np.concatenate([np.sin(angle_rads), np.cos(angle_rads)], axis=-1) 
 
     return tf.cast(pos_encoding, dtype=tf.float32)
@@ -47,13 +41,10 @@ class PositionalEncoding(tf.keras.layers.Layer):
         return x
 
 def mask_seq(input, mask):
-<<<<<<< HEAD:model.py
-=======
     input = tf.cast(input, tf.int32)
->>>>>>> 2dcee8b553a442c7d5b19140d5e94bc6afc199ba:khoi_model.py
     mask_pos = mask == 0
     mask_values = tf.fill(input.shape, mask_token)
-    return tf.where(mask_pos, mask_values, input)
+    return tf.where(mask_pos, tf.cast(mask_values, tf.int32), input)
 
 def loss_function(predicted_seq, actual_seq, mask):
     pred_mask = (mask == 0)
@@ -80,13 +71,9 @@ class TransformerBlock(tf.keras.layers.Layer):
 
     def call(self, inputs, mask):
         #print("asdhjk")
-<<<<<<< HEAD:model.py
-        attention_output = self.attention(inputs, inputs, inputs, attention_mask = mask)
-=======
         mask = tf.cast(mask, tf.bool)
         attention_output = self.attention(inputs, inputs, inputs)
         attention_output = self.dropout_attention(attention_output)
->>>>>>> 2dcee8b553a442c7d5b19140d5e94bc6afc199ba:khoi_model.py
         residuals = self.norm_layer1(inputs + attention_output)
         output = self.feed_forward1(residuals)
         output = self.dropout_ff(output)
@@ -99,22 +86,14 @@ class TransformerBlock(tf.keras.layers.Layer):
 class TransformerModel(tf.keras.Model):
     def __init__(self):
         super().__init__()
-<<<<<<< HEAD:model.py
-        self.optimizer = tf.keras.optimizers.Adam()
-=======
         self.optimizer = tf.keras.optimizers.RMSprop()
         # self.optimizer = tf.keras.optimizers.legacy.Adam()
->>>>>>> 2dcee8b553a442c7d5b19140d5e94bc6afc199ba:khoi_model.py
         self.vocab_size = vocab_size
         self.hidden_size = hidden_size
+        print("vocab size: ", self.vocab_size)
+        print("embed_size: ", embed_size)
         self.pos_encoding = PositionalEncoding(vocab_size, embed_size, seq_len)
         self.transformer_blocks = [TransformerBlock(embed_size) for i in range(num_encoders)]
-<<<<<<< HEAD:model.py
-        self.classifier = tf.keras.layers.Dense(units=vocab_size, activation='softmax')
-
-
-    def call(self, input_seq, mask=None):
-=======
         self.classifier = tf.keras.layers.Dense(units=vocab_size, activation="sigmoid")
         self.classifier2 = tf.keras.layers.Dense(units=vocab_size)
 
@@ -122,7 +101,6 @@ class TransformerModel(tf.keras.Model):
     def call(self, input_seq, mask=None):
         print("")
         # print(f"actual: {input_seq[0]}")
->>>>>>> 2dcee8b553a442c7d5b19140d5e94bc6afc199ba:khoi_model.py
         masked_input = mask_seq(input_seq, mask)
         embed_seq = self.pos_encoding(masked_input)
         #print("pppppp")
@@ -133,11 +111,8 @@ class TransformerModel(tf.keras.Model):
         logits = self.classifier(embed_seq)
         logits = self.classifier2(logits)
         #print("qqqqqqq")
-<<<<<<< HEAD:model.py
-=======
         # print(f"pred: {tf.argmax(logits[0], axis=-1)}")
         # print(f"pred_masked: {tf.where(tf.cast(mask[0], tf.bool), -1, tf.argmax(logits[0], axis=-1))}")
->>>>>>> 2dcee8b553a442c7d5b19140d5e94bc6afc199ba:khoi_model.py
         return logits
     
     def train(self, dataset):
@@ -162,11 +137,9 @@ class TransformerModel(tf.keras.Model):
             avg_loss = float(total_loss / total_seen)
             avg_acc = float(total_correct / total_seen)
             avg_prp = np.exp(avg_loss)
-            print(f"\r[Valid {index+1}/{num_batches}]\t loss={avg_loss:.3f}\t acc: {avg_acc:.3f}\t perp: {avg_prp:.3f}", end='')
+            print(f"\r[Train {index+1}/{num_batches}]\t loss={avg_loss:.3f}\t acc: {avg_acc:.3f}\t perp: {avg_prp:.3f}", end='')
 
         return
-<<<<<<< HEAD:model.py
-=======
     
     def test(self, input, mask, batch_size):
         num_batches = int(len(input) / batch_size)
@@ -180,6 +153,8 @@ class TransformerModel(tf.keras.Model):
             batch_mask = mask[start:end, :-1]
 
             ## Perform a training forward pass. Make sure to factor out irrelevant labels.
+            print(batch_input[0])
+            print(batch_mask[0])
             probs = self(batch_input, batch_mask)
             num_predictions = tf.reduce_sum(tf.cast(batch_mask, tf.float32))
             loss = loss_function(probs, batch_input, batch_mask)
@@ -197,7 +172,6 @@ class TransformerModel(tf.keras.Model):
 
         return
 
->>>>>>> 2dcee8b553a442c7d5b19140d5e94bc6afc199ba:khoi_model.py
 
 
 

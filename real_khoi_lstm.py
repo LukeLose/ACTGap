@@ -1,6 +1,6 @@
 import tensorflow as tf
 import numpy as np
-from khoi_model import loss_function, accuracy_function, mask_seq
+from real_khoi_model import loss_function, accuracy_function, mask_seq
 import os
 
 
@@ -21,6 +21,11 @@ class RNNDecoder(tf.keras.layers.Layer):
         self.outfile = outfile
 
     def call(self, sequences, masks):
+        """
+        :param encoded_images: tensor of shape [BATCH_SIZE x 2048]
+        :param captions: tensor of shape [BATCH_SIZE x WINDOW_SIZE]
+        :return: batch logits of shape [BATCH_SIZE x WINDOW_SIZE x VOCAB_SIZE]
+        """
         print("")
         # print(f"actual: {sequences[0]}")
         masked_input = mask_seq(sequences, masks)
@@ -77,7 +82,7 @@ class RNNDecoder(tf.keras.layers.Layer):
 
             ## Perform a training forward pass. Make sure to factor out irrelevant labels.
             probs = self(batch_input, batch_mask)
-            num_predictions = tf.reduce_sum(tf.cast(batch_mask, tf.float32))
+            num_predictions = tf.reduce_sum(tf.cast(batch_mask == 0, tf.float32))
             loss = loss_function(probs, batch_input, batch_mask)
             accuracy = accuracy_function(probs, batch_input, batch_mask)
             
