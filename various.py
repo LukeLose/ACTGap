@@ -3,16 +3,16 @@ import numpy as np
 def estimate_max_len(fasta_path, k):
     lengths = []
     with open(fasta_path) as fh:
-        seq = ""
+        sequence = ""
         for line in fh:
             if line.startswith(">"):
-                if seq:
-                    lengths.append(len(seq) // k)
-                seq = ""
+                if sequence:
+                    lengths.append(len(sequence) // k)
+                sequence = ""
             else:
-                seq += line.strip()
-        if seq:
-            lengths.append(len(seq) // k)
+                sequence += line.strip()
+        if sequence:
+            lengths.append(len(sequence) // k)
     return int(np.percentile(lengths, 100))
 
 # example:
