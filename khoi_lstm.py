@@ -1,11 +1,12 @@
 import tensorflow as tf
 import numpy as np
 from khoi_model import loss_function, accuracy_function, mask_seq
+import os
 
 
 class RNNDecoder(tf.keras.layers.Layer):
 
-    def __init__(self, kmer_size):
+    def __init__(self, kmer_size, outfile):
 
         super().__init__()
         self.vocab_size  = 4 ** kmer_size + 2
@@ -17,7 +18,8 @@ class RNNDecoder(tf.keras.layers.Layer):
         self.classification = tf.keras.layers.Dense(self.vocab_size)
 
         self.optimizer = tf.keras.optimizers.Adam()
-        
+        self.outfile = outfile
+
     def call(self, sequences, masks):
         """
         :param encoded_images: tensor of shape [BATCH_SIZE x 2048]
@@ -34,10 +36,14 @@ class RNNDecoder(tf.keras.layers.Layer):
         return output3
     
     def train(self, dataset):
-        print(type(dataset))
+        # print(type(dataset))
         total_loss = total_seen = total_correct = 0
         num_batches = len(dataset)
     
+        if not os.path.exists(self.outfile):
+            with open(self.outfile, 'a') as f:
+                f.write("train_index\tloss\tacc\tbatch_acc\tperp\n")
+                
         for index, (batch_ids, batch_masks) in enumerate(dataset):
             with tf.GradientTape() as tape:
                 probs = self(batch_ids, batch_masks)
@@ -55,6 +61,8 @@ class RNNDecoder(tf.keras.layers.Layer):
             avg_loss = float(total_loss / total_seen)
             avg_acc = float(total_correct / total_seen)
             avg_prp = np.exp(avg_loss)
+            with open(self.outfile, 'a') as f:
+                f.write(f"{index+1}\t{avg_loss:.3f}\t{avg_acc:.3f}\t{accuracy:.3f}\t{avg_prp:.3f}\n")
             print(f"\r[Train {index+1}/{num_batches}]\t loss={avg_loss:.3f}\t acc: {avg_acc:.3f}\t batch_acc: {accuracy:.3f}\t perp: {avg_prp:.3f}", end='')
 
             
@@ -64,6 +72,8 @@ class RNNDecoder(tf.keras.layers.Layer):
         num_batches = int(len(input) / batch_size)
 
         total_loss = total_seen = total_correct = 0
+        with open(self.outfile, 'a') as f:
+                f.write("test_index\tloss\tacc\tbatch_acc\tperp\n")
         for index, end in enumerate(range(batch_size, len(input)+1, batch_size)):
 
             start = end - batch_size
@@ -84,6 +94,8 @@ class RNNDecoder(tf.keras.layers.Layer):
             avg_loss = float(total_loss / total_seen)
             avg_acc = float(total_correct / total_seen)
             avg_prp = np.exp(avg_loss)
+            with open(self.outfile, 'a') as f:
+                f.write(f"{index+1}\t{avg_loss:.3f}\t{avg_acc:.3f}\t{accuracy:.3f}\t{avg_prp:.3f}\n")
             print(f"\r[TEST {index+1}/{num_batches}]\t loss={avg_loss:.3f}\t acc: {avg_acc:.3f}\t batch_acc: {accuracy:.3f}\t perp: {avg_prp:.3f}", end='')
 
         return

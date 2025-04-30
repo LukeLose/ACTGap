@@ -23,6 +23,7 @@ def default_settings_and_PARSER() -> argparse.Namespace:
     parser.add_argument("--max_gap", type=int, required=True, help="max kmer gap: REQUIRED")
     parser.add_argument("--model", type=str, required=True, default="lstm", help="model: REQUIRED")
     parser.add_argument("--test_fasta", required=True, help="test_FASTA path: REQUIRED")
+    parser.add_argument("--out", required=True, help="out: REQUIRED")
     return parser.parse_args()
 
 def main():
@@ -47,7 +48,7 @@ def main():
     # print(dataset)
     # print(kmer_inputs)
     if args.model == "lstm":
-        model = RNNDecoder(args.kmer_length)
+        model = RNNDecoder(args.kmer_length, args.out)
     else:
         model = TransformerModel()
     # for batch_ids, batch_masks in dataset:
