@@ -14,6 +14,10 @@ parser.add_argument("--gap_len", type=int, default=6)
 parser.add_argument("--batch", type=int, default=32)
 parser.add_argument("--epochs", type=int, default=10)
 parser.add_argument("--lr", type=float, default=3e-4)
+parser.add_argument("--val_split", type=float, default=0.15,
+                    help="fraction of examples for testing")
+parser.add_argument("--outfile",   default="train_test.log",
+                    help="accuracy output file")
 args = parser.parse_args()
 
 #take the
@@ -36,7 +40,7 @@ model = DecoderModel(
     vocab_size=vocab_size,
     seq_len=seq_len,
     num_layers=4,
-    embed_dim=256,
+    embed_size=256,
     num_heads=8,
     hidden_size=512,
 )
