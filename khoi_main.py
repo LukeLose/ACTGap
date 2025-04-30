@@ -22,6 +22,7 @@ def default_settings_and_PARSER() -> argparse.Namespace:
     parser.add_argument("--min_gap", type=int, required=True, help="min kmer gap: REQUIRED")
     parser.add_argument("--max_gap", type=int, required=True, help="max kmer gap: REQUIRED")
     parser.add_argument("--model", type=str, required=True, default="lstm", help="model: REQUIRED")
+    parser.add_argument("--test_fasta", required=True, help="test_FASTA path: REQUIRED")
     return parser.parse_args()
 
 def main():
@@ -38,8 +39,8 @@ def main():
         kmer_pkl_path= args.pkl
     )
     masks_input = make_contiguous_gaps(kmer_inputs, args.min_gap, args.max_gap)
-    print("k_mer input matrix:", kmer_inputs.shape)
-    print("masks input matrix:", masks_input.shape)
+    # print("k_mer input matrix:", kmer_inputs.shape)
+    # print("masks input matrix:", masks_input.shape)
 
     dataset = make_dataset(kmer_inputs, masks_input, args.batch)
     print("hello")
@@ -61,8 +62,15 @@ def main():
         print()
 
     #TAKE THIS OUT, ONLY NEEDED BEFORE IMPLEMENTING SPLITTING OF 80/20
+    test_kmer_inputs, _ = encode_fasta_to_kmer_ids(
+        fasta_path   = args.test_fasta,
+        window_size  = args.window,
+        kmer_length  = args.kmer_length,
+        kmer_pkl_path= args.pkl
+    )
+    test_masks_input = make_contiguous_gaps(test_kmer_inputs, args.min_gap, args.max_gap)
 
-    model.test()
+    model.test(test_kmer_inputs, test_masks_input, args.batch)
 
     
 

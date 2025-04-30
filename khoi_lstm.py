@@ -25,12 +25,12 @@ class RNNDecoder(tf.keras.layers.Layer):
         :return: batch logits of shape [BATCH_SIZE x WINDOW_SIZE x VOCAB_SIZE]
         """
         print("")
-        print(f"actual: {sequences[0]}")
+        # print(f"actual: {sequences[0]}")
         masked_input = mask_seq(sequences, masks)
         output2 = self.decoder(self.embedding(masked_input))
         output3 = self.classification(output2)
-        print(f"pred: {tf.argmax(output3[0], axis=-1)}")
-        print(f"pred_masked: {tf.where(tf.cast(masks[0], tf.bool), -1, tf.argmax(output3[0], axis=-1))}")
+        # print(f"pred: {tf.argmax(output3[0], axis=-1)}")
+        # print(f"pred_masked: {tf.where(tf.cast(masks[0], tf.bool), -1, tf.argmax(output3[0], axis=-1))}")
         return output3
     
     def train(self, dataset):
@@ -55,6 +55,35 @@ class RNNDecoder(tf.keras.layers.Layer):
             avg_loss = float(total_loss / total_seen)
             avg_acc = float(total_correct / total_seen)
             avg_prp = np.exp(avg_loss)
-            print(f"\r[Train {index+1}/{num_batches}]\t loss={avg_loss:.3f}\t acc: {avg_acc:.3f}\t perp: {avg_prp:.3f}", end='')
+            print(f"\r[Train {index+1}/{num_batches}]\t loss={avg_loss:.3f}\t acc: {avg_acc:.3f}\t batch_acc: {accuracy:.3f}\t perp: {avg_prp:.3f}", end='')
+
+            
+        return
+    
+    def test(self, input, mask, batch_size):
+        num_batches = int(len(input) / batch_size)
+
+        total_loss = total_seen = total_correct = 0
+        for index, end in enumerate(range(batch_size, len(input)+1, batch_size)):
+
+            start = end - batch_size
+            batch_input = input[start:end, :-1]
+            batch_mask = mask[start:end, :-1]
+
+            ## Perform a training forward pass. Make sure to factor out irrelevant labels.
+            probs = self(batch_input, batch_mask)
+            num_predictions = tf.reduce_sum(tf.cast(batch_mask, tf.float32))
+            loss = loss_function(probs, batch_input, batch_mask)
+            accuracy = accuracy_function(probs, batch_input, batch_mask)
+            
+            ## Compute and report on aggregated statistics
+            total_loss += loss
+            total_seen += num_predictions
+            total_correct += num_predictions * accuracy
+
+            avg_loss = float(total_loss / total_seen)
+            avg_acc = float(total_correct / total_seen)
+            avg_prp = np.exp(avg_loss)
+            print(f"\r[TEST {index+1}/{num_batches}]\t loss={avg_loss:.3f}\t acc: {avg_acc:.3f}\t batch_acc: {accuracy:.3f}\t perp: {avg_prp:.3f}", end='')
 
         return

@@ -72,8 +72,6 @@ class TransformerBlock(tf.keras.layers.Layer):
     def call(self, inputs, mask):
         #print("asdhjk")
         mask = tf.cast(mask, tf.bool)
-        attention_mask = tf.logical_not(tf.expand_dims(mask, axis=1) & tf.expand_dims(mask, axis=2))
-
         attention_output = self.attention(inputs, inputs, inputs)
         attention_output = self.dropout_attention(attention_output)
         residuals = self.norm_layer1(inputs + attention_output)
@@ -118,7 +116,7 @@ class TransformerModel(tf.keras.Model):
         return logits
     
     def train(self, dataset):
-        print(type(dataset))
+        # print(type(dataset))
         total_loss = total_seen = total_correct = 0
         num_batches = len(dataset)
     
@@ -150,14 +148,15 @@ class TransformerModel(tf.keras.Model):
         for index, end in enumerate(range(batch_size, len(input)+1, batch_size)):
 
             ## Get the current batch of data, making sure to try to predict the next word
-            # start = end - batch_size
-            # input = input[start:end, :-1]
+            start = end - batch_size
+            batch_input = input[start:end, :-1]
+            batch_mask = mask[start:end, :-1]
 
             ## Perform a training forward pass. Make sure to factor out irrelevant labels.
-            probs = self(input, mask)
-            num_predictions = tf.reduce_sum(tf.cast(mask, tf.float32))
-            loss = loss_function(probs, input, mask)
-            accuracy = accuracy_function(probs, input, mask)
+            probs = self(batch_input, batch_mask)
+            num_predictions = tf.reduce_sum(tf.cast(batch_mask, tf.float32))
+            loss = loss_function(probs, batch_input, batch_mask)
+            accuracy = accuracy_function(probs, batch_input, batch_mask)
             
             ## Compute and report on aggregated statistics
             total_loss += loss
