@@ -20,7 +20,7 @@ def positional_encoding(length, depth):
 
     angle_rates = 1 / (10000**depths)        
     angle_rads = positions * angle_rates    
-
+    
     pos_encoding = np.concatenate([np.sin(angle_rads), np.cos(angle_rads)], axis=-1) 
 
     return tf.cast(pos_encoding, dtype=tf.float32)

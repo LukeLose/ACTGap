@@ -19,11 +19,6 @@ class RNNDecoder(tf.keras.layers.Layer):
         self.optimizer = tf.keras.optimizers.Adam()
         
     def call(self, sequences, masks):
-        """
-        :param encoded_images: tensor of shape [BATCH_SIZE x 2048]
-        :param captions: tensor of shape [BATCH_SIZE x WINDOW_SIZE]
-        :return: batch logits of shape [BATCH_SIZE x WINDOW_SIZE x VOCAB_SIZE]
-        """
         print("")
         # print(f"actual: {sequences[0]}")
         masked_input = mask_seq(sequences, masks)
