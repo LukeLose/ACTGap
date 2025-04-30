@@ -70,11 +70,22 @@ def main():
         kmer_length  = args.kmer_length,
         kmer_pkl_path= args.pkl
     )
-    test_masks_input = make_contiguous_gaps(test_kmer_inputs, args.min_gap, args.max_gap)
+    # test_masks_input = make_contiguous_gaps(test_kmer_inputs, args.min_gap, args.max_gap)
+    # model.test(test_kmer_inputs, test_masks_input, args.batch)
 
+<<<<<<< Updated upstream:real_khoi_main.py
     model.test(test_kmer_inputs, test_masks_input, args.batch)
 
     
+=======
+    if args.gap_location == "end":
+        test_masks_input = make_end_masked_gaps(test_kmer_inputs, args.min_gap, args.max_gap)
+        model.test(test_kmer_inputs, test_masks_input, args.batch)
+    elif args.gap_location == "random":
+        test_masks_input = make_contiguous_gaps(test_kmer_inputs, args.min_gap, args.max_gap)
+        model.test(test_kmer_inputs, test_masks_input, args.batch)
+
+>>>>>>> Stashed changes:khoi_main.py
 
 if __name__ == "__main__":
     main()
