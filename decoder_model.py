@@ -64,5 +64,5 @@ class DecoderModel(tf.keras.Model):
         for block in self.decoder_blocks:
             out = block(seq_embeddings, training=training)
         out = self.norm(out)
-        logits = self.classifer(out)  # (batch, seq_len, vocab)
+        logits = self.classifer(out)
         return logits
