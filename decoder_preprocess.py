@@ -1,14 +1,19 @@
 from typing import Tuple, List
 import numpy as np
 import tensorflow as tf
+from itertools import product
 
+#set the known padding ID
 pad_id = 0
 
 def build_kmer_dictionary(k: int) -> Tuple[dict, dict]:
-    #Takes a kmer size and generates all possible permutations of
-    #the base alphabet
+    '''
+    Takes a kmer size and generates all possible permutations of
+    the base alphabet
+    '''
     base_alphabet = ["A", "C", "G", "T", "N"]
-    kmers = ["".join(base) for base in __import__("itertools").product(base_alphabet, repeat=k)]
+    #create every permutation of our alphabet for the given length
+    kmers = ["".join(base) for base in product(base_alphabet, repeat=k)]
     token_to_bases = {}
     for i, kmer in enumerate(kmers):
         token_to_bases[kmer] = i + 1
@@ -20,9 +25,11 @@ def fasta_to_inputs(fasta_path: str,
                       token_to_bases: dict,
                       gap_length: int,
                       k_length: int) -> List[np.ndarray]:
+    '''
+    open the fasta path, find sequence lines and create sequences among multiple
+    lines of the fasta
+    '''
     seqs = []
-    #open the fasta path, find sequence lines and create sequences among multiple
-    #lines of the fasta
     with open(fasta_path) as fh:
         sequence = ""
         for line in fh:
@@ -60,9 +67,12 @@ def fasta_to_inputs(fasta_path: str,
         model_inputs.append((context_ids, gap_ids))
     return model_inputs
 
-#speed processing step that turns our group of tuples into an dataset array
+
 def make_dataset(model_inputs: List[Tuple[List[int], List[int]]], gap_id: int, seq_len: int,
                  batch_size: int = 32, shuffle: bool = True): 
+    '''
+    speed processing step that turns our group of tuples into an dataset array
+    '''
     #deafult to shuffling
     #Seperate back into indiv list
     input_arr = []
@@ -89,9 +99,11 @@ def make_dataset(model_inputs: List[Tuple[List[int], List[int]]], gap_id: int, s
     dataset = dataset.batch(batch_size).prefetch(tf.data.AUTOTUNE)
     return dataset
 
-#helper function that takes in the fasta and parses it to determine 
-#the largest sequence (for our training data it should be 1024)
 def max_length_helper(fasta_path, k_length):
+    '''
+    helper function that takes in the fasta and parses it to determine 
+    the largest sequence (for our training data it should be 1024)
+    '''
     max_nt = 0
     with open(fasta_path) as fh:
         sequence = []
