@@ -58,6 +58,7 @@ def accuracy_function(probs, inputs, mask):
     correct = tf.cast(tf.argmax(probs, axis=-1), tf.int32) == tf.cast(inputs, tf.int32)
     return tf.reduce_mean(tf.boolean_mask(tf.cast(correct, tf.float32), acc_mask))
 
+# Failed BERT encoder-only model. DO NOT USE. 
 class TransformerBlock(tf.keras.layers.Layer):
     def __init__(self, emb_sz):
         super().__init__()
@@ -70,7 +71,6 @@ class TransformerBlock(tf.keras.layers.Layer):
         self.dropout_ff = tf.keras.layers.Dropout(rate=0.3)
 
     def call(self, inputs, mask):
-        #print("asdhjk")
         mask = tf.cast(mask, tf.bool)
         attention_output = self.attention(inputs, inputs, inputs)
         attention_output = self.dropout_attention(attention_output)
@@ -80,7 +80,6 @@ class TransformerBlock(tf.keras.layers.Layer):
         output = self.feed_forward2(output)
         output = self.norm_layer2(output)
         output = tf.nn.relu(output)
-        #print("qwert")
         return output
 
 class TransformerModel(tf.keras.Model):
@@ -90,8 +89,6 @@ class TransformerModel(tf.keras.Model):
         # self.optimizer = tf.keras.optimizers.legacy.Adam()
         self.vocab_size = vocab_size
         self.hidden_size = hidden_size
-        print("vocab size: ", self.vocab_size)
-        print("embed_size: ", embed_size)
         self.pos_encoding = PositionalEncoding(vocab_size, embed_size, seq_len)
         self.transformer_blocks = [TransformerBlock(embed_size) for i in range(num_encoders)]
         self.classifier = tf.keras.layers.Dense(units=vocab_size, activation="sigmoid")
@@ -99,24 +96,15 @@ class TransformerModel(tf.keras.Model):
 
 
     def call(self, input_seq, mask=None):
-        print("")
-        # print(f"actual: {input_seq[0]}")
         masked_input = mask_seq(input_seq, mask)
         embed_seq = self.pos_encoding(masked_input)
-        #print("pppppp")
         for block in self.transformer_blocks:
-            #print("12345")
             embed_seq = block(embed_seq, mask)
-        #print("ooooooooo")
         logits = self.classifier(embed_seq)
         logits = self.classifier2(logits)
-        #print("qqqqqqq")
-        # print(f"pred: {tf.argmax(logits[0], axis=-1)}")
-        # print(f"pred_masked: {tf.where(tf.cast(mask[0], tf.bool), -1, tf.argmax(logits[0], axis=-1))}")
         return logits
     
     def train(self, dataset):
-        # print(type(dataset))
         total_loss = total_seen = total_correct = 0
         num_batches = len(dataset)
     
@@ -172,12 +160,3 @@ class TransformerModel(tf.keras.Model):
 
         return
 
-
-
-
-# sample_input = tf.constant([[1, 5, 6, 7]])
-# sample_mask = tf.constant([[1, 0, 0, 1]])
-# model = TransformerModel()
-#print(model(sample_input, sample_mask))
-#print("hiiiii")
-# model.train(sample_input, sample_mask, 1)
