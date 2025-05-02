@@ -44,7 +44,6 @@ for pth in (args.outfile_train, args.outfile_test):
 #pull max vocab size as kmer size plus pad and gap tokens
 #set vector space and amt of padding equal to largest sequence
 #on the fasta
-print("Initializing kmer dictionary")
 token_to_bases, _ = preprocess.build_kmer_dictionary(args.k)
 vocab_size = max(token_to_bases.values()) + 2
 GAP_ID = vocab_size - 1
