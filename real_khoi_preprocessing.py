@@ -28,6 +28,7 @@ def windows_from_fasta (fasta_path, window_size: int) -> Iterator[str]:
             for i in range(0, len(full_seq) - window_size + 1, window_size):
                 yield full_seq[i : i + window_size]
 
+# Create ditionary mapping k-mers to a unique id for tokenization
 def kmer_pkl_generation(kmer_length: int, output_path: str) -> None:
     alphabet = 'ACTG'
     output_path = Path(output_path)
@@ -42,37 +43,18 @@ def kmer_pkl_generation(kmer_length: int, output_path: str) -> None:
     print(kmer_dict)
     print(f"dump {len(kmer_dict)} k-mers of length {kmer_length} to {output_path}")
 
-# def window_to_kmer_ids(
-#     window: str,
-#     kmer_len: int,
-#     str_to_id: dict[str, int]
-# ) -> list[int]:
-#     n_kmers = len(window) - kmer_len + 1
-#     return [
-#         str_to_id[window[i : i + kmer_len]]
-#         for i in range(n_kmers)
-#     ]
 
 def encode_fasta_to_kmer_ids(fasta_path: str, window_size: int, kmer_length: int,
     kmer_pkl_path: str) ->Tuple[np.ndarray, Dict[int, str]]:
-    # #build pickle if not done prior
-    # if kmer_dict is None:
-    #     alphabet = "ACTG"
-    #     kmer_dict = {
-    #         idx: "".join(kmer)
-    #         for idx, kmer in enumerate(itertools.product(alphabet, repeat=kmer_length))
-    #     }
     with open(kmer_pkl_path, "rb") as f:
         kmer_dict: Dict[int, str] = pickle.load(f)
     # reverse-lookup for constant time searches in the right direction
     str_to_id: Dict[str, int] = {v: k for k, v in kmer_dict.items()}
 
-
-
     windows = list(windows_from_fasta(fasta_path, window_size))
     n_batches = len(windows)
     if n_batches == 0:
-        raise ValueError("No sequence windows produced, something wen horribly wrong")
+        raise ValueError("No sequence windows produced, something went horribly wrong")
 
     n_kmers = window_size - kmer_length + 1
     #2d array where each row is the batch and the columns are kmers
@@ -94,7 +76,6 @@ def encode_fasta_to_kmer_ids(fasta_path: str, window_size: int, kmer_length: int
                 raise KeyError("Non-ACTG alpabet string found")
 
     #add beginning and ending token       
-
     #next two unused tokens
     beg_id = len(kmer_dict) 
     end_id = len(kmer_dict) + 1
@@ -120,6 +101,7 @@ def make_contiguous_gaps(kmer_id_arr, min_gap=50, max_gap=100):
         masks[i, start : start + span_len] = 0
     return masks
 
+# Make masks that specify gaps at the end of the training sequence
 def make_end_masked_gaps(kmer_id_arr, min_gap=50, max_gap=100):
     batch_size, kmer_len = kmer_id_arr.shape
     masks = np.ones((batch_size, kmer_len), dtype=int)
@@ -133,6 +115,7 @@ def make_end_masked_gaps(kmer_id_arr, min_gap=50, max_gap=100):
 
     return masks
 
+# make dataset that is divided into batches that can be looped through
 def make_dataset(kmer_array: np.ndarray, masks_array: np.ndarray, batch_size: int) -> tf.data.Dataset:
     dataset = tf.data.Dataset.from_tensor_slices((kmer_array, masks_array))
     buff_size = len(kmer_array)
@@ -141,8 +124,7 @@ def make_dataset(kmer_array: np.ndarray, masks_array: np.ndarray, batch_size: in
     dataset = dataset.batch(batch_size).prefetch(tf.data.AUTOTUNE)
     return dataset
 
-
-
+# main logic for creating datasets for our models from raw .fasta DNA files
 if __name__ == "__main__":
     fasta_path     = "genome_data/sequence_first_100k.fasta"
     kmer_len       = 6
